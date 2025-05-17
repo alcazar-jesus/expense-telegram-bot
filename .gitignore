@@ -1,0 +1,29 @@
+# Entorno virtual
+venv/
+
+# Archivos de sistema
+*.pyc
+__pycache__/
+
+# Configuración local
+.env
+.python-version
+
+# Configuración 
+config/config.yaml
+
+# Datos privados
+data/
+data/*.json
+data/*.db
+data/*.csv
+
+# Logs
+logs/
+
+# Bloqueo de dependencias (si usas pipenv/poetry)
+poetry.lock
+
+# IDEs
+.vscode/
+.idea/
