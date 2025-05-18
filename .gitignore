@@ -14,7 +14,7 @@ config/config.yaml
 
 # Datos privados
 data/
-data/*.json
+data/users.json
 data/*.db
 data/*.csv
 
