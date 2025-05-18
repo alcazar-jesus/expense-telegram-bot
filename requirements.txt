@@ -1,4 +1,5 @@
 anyio==4.9.0
+asyncio==3.4.3
 certifi==2025.4.26
 h11==0.16.0
 httpcore==1.0.9
