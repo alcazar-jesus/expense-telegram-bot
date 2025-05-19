@@ -33,7 +33,7 @@ def main() -> None:
 
     logger.info("Bot iniciado, esperando los mensajes...")
 
-    register_all_handlers(app)
+    register_all_handlers(application)
     application.run_polling()
 
 if __name__ == '__main__':
