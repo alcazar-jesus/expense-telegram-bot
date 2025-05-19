@@ -12,6 +12,8 @@ with open(CONF_PATH, "r", encoding="utf-8") as f:
 TOKEN = cfg["telegram_token"]
 DATA_PATH = BASE_DIR / cfg["data_path"]
 DATA_FILE_PATH = BASE_DIR / cfg['data_file_path']
+REGISTER_PWD = cfg['register_pwd']
+
 
 if __name__ == '__main__':
 

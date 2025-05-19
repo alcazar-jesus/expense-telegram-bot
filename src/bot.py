@@ -1,8 +1,13 @@
+import sys
+
+from pathlib import Path
 import logging.config
 import logging
 
-
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 from src.settings import BASE_DIR, TOKEN
+from src.handlers.router import register_all_handlers
+
 from telegram.ext import ApplicationBuilder
 
 
@@ -28,6 +33,7 @@ def main() -> None:
 
     logger.info("Bot iniciado, esperando los mensajes...")
 
+    register_all_handlers(app)
     application.run_polling()
 
 if __name__ == '__main__':
