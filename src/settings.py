@@ -1,23 +1,21 @@
-import yaml
+import os
+from dotenv import load_dotenv
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.parent
-CONF_PATH = BASE_DIR / "config" / "config.yaml"
+
+env_path = BASE_DIR / "config" / ".env"
+load_dotenv(dotenv_path=env_path)
 
 
-with open(CONF_PATH, "r", encoding="utf-8") as f:
-    cfg = yaml.safe_load(f)
-
-
-TOKEN = cfg["telegram_token"]
-DATA_PATH = BASE_DIR / cfg["data_path"]
-DATA_FILE_PATH = BASE_DIR / cfg['data_file_path']
-REGISTER_PWD = cfg['register_pwd']
+TOKEN = os.getenv('API_TOKEN')
+DATA_PATH = BASE_DIR / "data"
+DATA_FILE_PATH = BASE_DIR / "data" / "gastos.csv"
+REGISTER_PWD = cfg['REGISTER_PWD']
 
 
 if __name__ == '__main__':
 
     print(TOKEN)
     print(BASE_DIR)
-    print(CONF_PATH)
     print(DATA_PATH)
