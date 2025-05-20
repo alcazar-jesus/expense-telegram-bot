@@ -4,7 +4,7 @@ Bot de Telegram para registrar gastos e ingresos de forma sencilla y estructurad
 
 ### Descripción
 
-Este proyecto es un bot de Telegram escrito en Python sin componentes de IA. Permite al usuario guardar sus transacciones diarias (gastos e ingresos) especificando:
+Este proyecto es un bot de Telegram escrito en Python. Permite al usuario guardar sus transacciones diarias (gastos e ingresos) especificando:
 
 * **Fecha** (YYYY-MM-DD)
 * **Importe**
@@ -49,30 +49,20 @@ expense-telegram-bot/
 │   │   └── formatter.py    # Formatea mensajes, fechas, etc.
 │   └── settings.py         # Carga de config.yaml
 │
-├── tests/
-│   ├── test_models.py
-│   ├── test_utils.py
-│   └── test_handlers.py
-│
-└── .github/
-    └── workflows/
-        └── ci.yml          # GitHub Actions: lint, tests, tipo-checking
+└── tests/
+    ├── test_models.py
+    ├── test_utils.py
+    └── test_handlers.py
+
+
 
 ```
 
 
-### Conceptos clave
-
-* **Entorno virtual (`venv`)**: Aísla las dependencias de tu proyecto para evitar conflictos con otros proyectos. Se crea con `python3 -m venv venv` y se activa con `source venv/bin/activate`.
 
 * **requirements.txt**: Lista de dependencias instaladas en el entorno virtual. Se genera con `pip freeze > requirements.txt` y permite reproducir el entorno con `pip install -r requirements.txt`.
 
-* **Logging**: Registro de eventos de la aplicación (errores, acciones) en `logs/bot.log` usando el módulo estándar `logging` de Python.
-
 * **Handlers**: Cada paso de la conversación (pedir fecha, importe, tipo, etc.) se gestiona en un módulo separado dentro de `handlers/`. Esto facilita la mantenibilidad y escalabilidad del bot.
 
-* **CSV y JSON**: Formatos de almacenamiento de datos. Usamos CSV para los registros de transacciones y JSON para datos de usuarios.
 
 ---
-
-Con este README ya tienes una visión general de la estructura y los componentes del proyecto. ¡Manos a la obra!
