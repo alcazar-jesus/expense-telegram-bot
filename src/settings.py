@@ -11,7 +11,7 @@ load_dotenv(dotenv_path=env_path)
 TOKEN = os.getenv('API_TOKEN')
 DATA_PATH = BASE_DIR / "data"
 DATA_FILE_PATH = BASE_DIR / "data" / "gastos.csv"
-REGISTER_PWD = cfg['REGISTER_PWD']
+REGISTER_PWD = os.getenv('REGISTER_PWD')
 
 
 if __name__ == '__main__':

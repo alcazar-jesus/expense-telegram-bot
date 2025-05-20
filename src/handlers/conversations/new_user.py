@@ -15,7 +15,7 @@ from telegram.ext import (
     filters
 )
 
-logger = logging.getLogger("expense_bot.handlers.commands")
+logger = logging.getLogger("expense_bot.handlers.conversations")
 
 class ConvState(IntEnum):
     NEW_USER_PWD = auto()
@@ -58,7 +58,7 @@ async def enter_pwd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         logger.info("Usuario registrado con éxito: %s, %s", user.id, user.first_name)
         await update.message.reply_text(
-            f"✅ Bienveni@ {user.first_name}! Ya puedes continuar :)"
+            f"✅ Bienveni@ {user.first_name}! Usa el comando /start para empezar :)"
         )
 
         return ConversationHandler.END

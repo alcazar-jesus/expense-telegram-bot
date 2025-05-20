@@ -20,34 +20,40 @@ Los registros se escriben en `data/records.csv`. La información de usuarios se 
 
 ```
 expense-telegram-bot/
-├── .git/                   # repositorio Git
-├── .gitignore              # Ignorar venv, __pycache__, CSV de datos, etc.
-├── README.md               # Documentación del proyecto
-├── .python-version         # Versión de Python gestionada por pyenv (3.13.3)
-├── requirements.txt        # Dependencias del proyecto
-├── venv/                   # Entorno virtual creado con pyenv+venv
+├── .git/                       # repositorio Git
+├── .gitignore                  # Ignorar venv, __pycache__, CSV de datos, etc.
+├── README.md                   # Documentación del proyecto
+├── .python-version             # Versión de Python gestionada por pyenv (3.13.3)
+├── requirements.txt            # Dependencias del proyecto
+├── venv/                       # Entorno virtual creado con pyenv+venv
 │
 ├── config/
-│   ├── config.yaml         # Token de Telegram, rutas de archivos, categorías, etc.
-│   └── logging.conf        # Configuración de logging
+│   ├── .env                    # Token de Telegram, contraseña para nuevos usuarios
+│   └── logging.conf            # Configuración de logging
 │
 ├── data/
-│   └── expenses.csv        # CSV de datos (gestión: header si no existe)
-│   └── users.json          # JSON con info de usuarios
+│   └── expenses.csv            # CSV de datos (gestión: header si no existe)
+│   └── users.json              # JSON con info de usuarios
 │
 ├── src/
-│   ├── bot.py              # Punto de entrada: arranca el updater y dispatcher
+│   ├── bot.py                  # Punto de entrada: arranca el updater y dispatcher
 │   ├── handlers/
-│   │   ├── __init__.py
-│   │   ├── conversation.py # Lógica de estados y handlers de la conversación
-│   │   └── commands.py     # Handlers de comandos (/start, /help, /reporte)
+│   │   ├── commands/           # Carpeta para guardar todos los códigos que gestionan comandos
+|   |   |   ├── start.py  
+|   |   |   └── new_category.py 
+|   |   ├── conversations/      # Carpeta para guardar todos los códigos que gestionan conversaciones
+│   │   |   ├── new_user.py 
+│   │   |   ├──  enter_expense.py    
+|   |   |   └── new_category.py 
+|   |   └── router.py           # Código que añade todos los handlers a la app
+|   |
 │   ├── models/
-│   │   └── expense.py      # Clase Expense, validación de datos, serialización a CSV
+│   │   └── expense.py          # Clase Expense, validación de datos, serialización a CSV
 │   ├── utils/
-│   │   ├── csv_utils.py    # Funciones de lectura/escritura en CSV
-│   │   ├── validators.py   # Validación de fechas, importes, categorías
-│   │   └── formatter.py    # Formatea mensajes, fechas, etc.
-│   └── settings.py         # Carga de config.yaml
+│   │   ├── category_utils.py   # Funciones de lectura/escritura en CSV
+│   │   ├── csv_utils.py        # Validación de fechas, importes, categorías
+│   │   └── user_utils.py       # Formatea mensajes, fechas, etc.
+│   └── settings.py             # Carga de config.yaml
 │
 └── tests/
     ├── test_models.py
@@ -55,11 +61,51 @@ expense-telegram-bot/
     └── test_handlers.py
 
 
-
 ```
 
+---
+
+# TO DO LIST
+
+- [x] Estructura del proyecto montada
+- [x] Inicialización del bot
+- [x] Gestión de usuarios v1
+- [ ] Conversación para añadir un gasto
+    - [ ] Añadir gasto/ingreso
+    - [ ] Poder hacer modificaciones
+    - [ ] Poder modificar fecha
+    - [ ] Confirmación del gasto
+    - [ ] Modificar categoría (y en el momento añadir una nueva categoría)
+    - [ ] Lógica de viajes (si la categoría es viajes por defecto tomar el último viaje)
+
+### Características futuras
+
+- [ ] Ver estadísticas de gastos
+- [ ] Listar últimos gastos
+- [ ] Poder eliminar algún gasto que esté mal 
+    - [ ] Eliminar el último gasto
+    - [ ] Eliminar un gasto en específico
+    - [ ] Poder modificar un gasto
+- [ ] Añandir "gastos" de inversiones
+    - [ ] Nueva categoría que sea "Inversión"
+    - [ ] Calcular rentabilidades de las inversiones
+    - [ ] Hacer seguimiento de las inversiones
+- [ ] Hacer predicción de gastos según mis gastos actuales
+    - [ ] Capacidad de enviar notificaciones si estoy gastando más de lo habitual
+    - [ ] Enviar notificaciones si he gastado poco un mes
+    - [ ] Enviar notificación si no he apuntado algún gasto este mes (los ingresos, algún gasto recurrente, etc.)
+- [ ] Poder subir gastos "de golpe".
+    - [ ] Subir un csv y que apunte los gastos que no estén ya apuntados
+    - [ ] Poder pasar un enlace a un google sheet y que lea los gastos de ahí
 
 
+#### Características muy futuras
+ 
+- [ ] Capacidad de entender lenguaje natural
+- [ ] Poder subir foto de recibo y que registre automáticamente el gasto
+
+
+---
 * **requirements.txt**: Lista de dependencias instaladas en el entorno virtual. Se genera con `pip freeze > requirements.txt` y permite reproducir el entorno con `pip install -r requirements.txt`.
 
 * **Handlers**: Cada paso de la conversación (pedir fecha, importe, tipo, etc.) se gestiona en un módulo separado dentro de `handlers/`. Esto facilita la mantenibilidad y escalabilidad del bot.

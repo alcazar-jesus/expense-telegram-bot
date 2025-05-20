@@ -2,9 +2,12 @@ import sys
 import json
 
 from pathlib import Path 
+from typing import List
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from src.settings import BASE_DIR, DATA_PATH
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 CATS_PATH = DATA_PATH / "categories.json"
 
@@ -62,7 +65,19 @@ def add_category(name: str, ind_cat: str = 'gasto') -> bool:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
     return True
-    
+
+def chunk_list(lst: List, n: int) -> List[List]:
+    """Divide una lista en sublistas de longitud n."""
+    return [lst[i:i + n] for i in range(0, len(lst), n)]
+
+def load_category_markup(ind_cat: str = 'gasto') -> InlineKeyboardMarkup:
+    categories = load_categories(ind_cat)
+    buttons = [
+        InlineKeyboardButton(cat, callback_data=f"{cat.upper()}")
+        for cat in categories
+    ]
+    keyboard = chunk_list(buttons, 3)
+    return InlineKeyboardMarkup(keyboard)
 
 
 
