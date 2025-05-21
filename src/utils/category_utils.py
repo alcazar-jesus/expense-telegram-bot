@@ -73,7 +73,7 @@ def chunk_list(lst: List, n: int) -> List[List]:
 def load_category_markup(ind_cat: str = 'gasto') -> InlineKeyboardMarkup:
     categories = load_categories(ind_cat)
     buttons = [
-        InlineKeyboardButton(cat, callback_data=f"{cat.upper()}")
+        InlineKeyboardButton(cat, callback_data=f"{cat}")
         for cat in categories
     ]
     keyboard = chunk_list(buttons, 3)

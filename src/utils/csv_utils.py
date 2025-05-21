@@ -1,4 +1,5 @@
 import csv
+import pandas as pd
 
 from pathlib import Path
 from src.settings import BASE_DIR, DATA_FILE_PATH
@@ -12,7 +13,7 @@ def save_expense(expense: Expense, path: Path = DATA_FILE_PATH) -> None:
     # Comprobamos que el path existe:
     first = not path.exists()
     path.parent.mkdir(parents=True, exist_ok=True) # si no existe lo creamos
-    with open(path, 'a', encodign='utf-8') as f:
+    with open(path, 'a', encoding='utf-8') as f:
         writer = csv.writer(f)
 
         if first:
@@ -20,4 +21,16 @@ def save_expense(expense: Expense, path: Path = DATA_FILE_PATH) -> None:
 
         writer.writerow(expense.to_csv_row())
 
+def get_last_trip(path: Path = DATA_FILE_PATH) -> str:
+    """_summary_
 
+    Args:
+        path (Path, optional): _description_. Defaults to DATA_FILE_PATH.
+
+    Returns:
+        str: _description_
+    """
+    df = pd.read_csv(path, sep=';')
+    if df.empty:
+        return None
+    return df['viaje'].iloc[-1]

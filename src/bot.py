@@ -34,7 +34,7 @@ def main() -> None:
     logger.info("Bot iniciado, esperando los mensajes...")
 
     register_all_handlers(application)
-    application.run_polling()
+    application.run_polling(drop_pending_updates=True)
 
 if __name__ == '__main__':
     main()
