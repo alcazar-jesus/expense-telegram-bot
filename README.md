@@ -84,6 +84,7 @@ expense-telegram-bot/
 
 ### Características futuras
 
+- [ ] Migrar a SQL las tablas
 - [ ] Ver estadísticas de gastos
 - [ ] Listar últimos gastos
 - [ ] Poder eliminar algún gasto que esté mal 
