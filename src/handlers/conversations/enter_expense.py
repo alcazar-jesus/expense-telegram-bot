@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from enum import IntEnum, auto
 
 from src.utils.category_utils import load_categories, load_category_markup
@@ -23,6 +24,11 @@ class ConvState(IntEnum):
     INCOME_ENTRY = auto()
     SPENDING_ENTRY = auto()
     ENTER_EXPENSE = auto()
+    ENTER_WHO = auto()
+    ENTER_TRIP = auto()
+    CONFIRM = auto()
+    MODIFY = auto()
+    ENTER_DATE = auto()
 
 
 # start_entry
