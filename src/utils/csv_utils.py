@@ -17,7 +17,7 @@ def save_expense(expense: Expense, path: Path = DATA_FILE_PATH) -> None:
     first = not path.exists()
     path.parent.mkdir(parents=True, exist_ok=True) # si no existe lo creamos
     with open(path, 'a', encoding='utf-8', newline='') as f:
-        writer = csv.writer(f, delimiter=';')
+        writer = csv.writer(f, delimiter=';', lineterminator='\n')
         print(first)
         if first:
             writer.writerow(["user","fecha","importe","tipo","concepto","descripcion","quien","viaje","anualizable"])
@@ -37,7 +37,8 @@ def get_last_trip(path: Path = DATA_FILE_PATH, n: int = 1) -> str:
     df = pd.read_csv(path, sep=';')
     if df.empty:
         return None
+    df['fecha'] = pd.to_datetime(df['fecha'], errors='coerce', dayfirst=True)
     df = df[(datetime.today() - df['fecha']).dt.days < n*30]
-    if df.empty or isnan(df['viaje'].iloc[-1]):
+    if df.empty or pd.isna(df['viaje'].iloc[-1]):
         return None
     return df['viaje'].iloc[-1]

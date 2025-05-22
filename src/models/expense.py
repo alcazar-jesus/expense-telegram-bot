@@ -19,11 +19,11 @@ class Expense:
     user: str
     _fecha: date = field(default=datetime.today().strftime('%d/%m/%Y'), init=False)
     _importe: float = None
-    _tipo: str = None
-    _categoria: str = None
-    _descripcion: str = None
-    _quien: str = None
-    _viaje: Optional[str] = None
+    _tipo: str = ''
+    _categoria: str = ''
+    _descripcion: str = ''
+    _quien: str = ''
+    _viaje: Optional[str] = ''
     _anualizable: Optional[bool] = False    # Para futuro incluir esto también, indicador de si el gasto o el ingreso es anualizable 
                                             # (es decir, para el computo este gasto se debería anualizar, por ejemplo si son 120€, serían 12€ al mes).
 
@@ -39,7 +39,7 @@ class Expense:
                 value = datetime.strptime(value, '%d/%m/%y')
             except ValueError as e:
                 raise ValueError("La fecha tiene que ser en formato dd/mm/YYYY o en formato dd/mm/YY: {e}")
-        self._fecha = value      
+        self._fecha = value.strftime('%d/%m/%Y')  
     
     @property
     def importe(self) -> float:
@@ -117,12 +117,12 @@ class Expense:
         self._anualizable = value 
         
     def __str__(self):
-        return f"📅Fecha: {self.fecha}\n💰Importe: {self.importe}\n✒️Tipo: {self.tipo}\n📚Categoria: {self.categoria}\n📃Descripción: {self.descripcion}\n👣Con quién: {self.quien}\n✈️Nombre del viaje: {self.viaje or '-'}\n📊¿Es anualizabble? {self.anualizable or '-'}"
+        return f"📅Fecha: {self.fecha}\n💰Importe: {self.importe}\n✒️Tipo: {self.tipo}\n📚Categoria: {self.categoria}\n📃Descripción: {self.descripcion}\n👣Con quién: {self.quien}\n✈️Nombre del viaje: {self.viaje or '-'}\n📊¿Es anualizable? {self.anualizable or '-'}"
     
     def to_csv_row(self) -> List[str]:
-        return [self.user, self.fecha, str(self.importe), self.tipo, 
+        return [str(self.user), self.fecha, str(self.importe), self.tipo, 
                 self.categoria, self.descripcion, self.quien, 
-                self.viaje or "", self.anualizable]
+                self.viaje or "", str(self.anualizable)]
 
     # La función de guardar podría estar aquí como método de la clase (para poder hacer expense.save()),
     # pero entonces la clase ya no sería solo el modelo de datos sino que también se encargaría del I/O

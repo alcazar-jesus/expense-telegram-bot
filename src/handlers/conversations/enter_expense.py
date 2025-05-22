@@ -72,12 +72,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         int: Estado de la conversación
     """
     
-    # Lo primero que hago es registrar el estado en el que está, para ello hay una lista que lleva este registro
-    # la cabeza de la lista es el estado actual. Si vuelvo a un estado anterior la cabeza de la lista se mueve 
-    # un registro a la izquierda y se borra el estado en el que estaba, es decir, se hacer un drop del estado anterior.
-    context.user_data['states'] = [ConvState.START]
-    
-    
     # Nos traemos la info del usuario que se está comunicando
     user = update.effective_user
 
@@ -122,22 +116,25 @@ async def enter_import(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         int: _description_
     """
     # Actualizo la lista de estados:
-    context.user_data['states'].append(ConvState.ENTER_EXPENSE)
     
-    
+
     expense_type = LABELS_ConvState[int(update.callback_query.data)]
-    user = update.effective_user
-    
     context.user_data["expense_obj"].tipo = expense_type # He cambiado ConvState.SPENDING_ENTRY por su valor correspondiente
+
+    
+    user = update.effective_user
     
     logger.info(f"El usuario {user.id} quiere añadir un {expense_type}")
 
+    # No cambia ya que si venimos de hacer back en el estado categoria también viene de un CallbackQuery
     if expense_type == LABELS_ConvState[int(ConvState.SPENDING_ENTRY)]:
+        await update.callback_query.answer()
         await update.callback_query.edit_message_text(
             f"{random.choice(EMOJIS_GASTOS)} {random.choice(CUNADO_CHISTES_GASTOS)}\n\n{random.choice(FRASES_PEDIR_GASTO)}",
             )
         
     elif expense_type == LABELS_ConvState[int(ConvState.INCOME_ENTRY)]:
+        await update.callback_query.answer()
         await update.callback_query.edit_message_text(
             f"{random.choice(EMOJIS_INGRESOS)} {random.choice(CUNADO_CHISTES_INGRESO)}\n\n{random.choice(FRASES_PEDIR_INGRESO)}",
             )    
@@ -157,11 +154,9 @@ async def select_category(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         int: _description_
     """
     
-    # Actualizo el estado:
-    context.user_data['states'].append(ConvState.SELECT_TYPE)
     
+
     importe = update.message.text
-    user = update.effective_user
     try:
         context.user_data['expense_obj'].importe = importe
     except Exception as e:
@@ -171,7 +166,10 @@ async def select_category(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             f"Vaya, el importe de {importe} es incorrecto, asegurate de que no es negativo o que es un valor numérico!"
         )
         return ConvState.SELECT_TYPE
-     
+    
+    
+    user = update.effective_user
+    
     logger.info(f"El usuario {user.id} quiere añadir un {context.user_data['expense_obj'].tipo}: {importe}")
     
     
@@ -196,11 +194,10 @@ async def enter_description(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         int: Estado
     """
     
-    # Actualizo el estado:
-    context.user_data['states'].append(ConvState.ENTER_DESCRIPTION)
+
     
     cat = update.callback_query.data
-    print(cat)
+
     user = update.effective_user
     
     context.user_data['expense_obj'].categoria = cat
@@ -210,6 +207,7 @@ async def enter_description(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     # si no se pasará a preguntar por la descripción directamente
     if cat != 'Viajes':
         # Si es distinto de "Viajes", pedimos que nos diga la descripción y pasamos de estado
+        await update.callback_query.answer()
         await update.callback_query.edit_message_text(
                 f"🎯Introduce una breve descripción del {context.user_data['expense_obj'].tipo}:"
             )
@@ -219,6 +217,7 @@ async def enter_description(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         # en caso de que sea lo anotamos y pasamos al siguiente caso.
         # Si la respuesta es no, apuntamos el nuevo viaje.
         last_trip = get_last_trip(DATA_FILE_PATH)
+
         if last_trip:
             # Si hay un último viaje (en los últimos días) preguntamos si es de este viaje, si no pues apuntamos uno nuevo
             # Queda la parte de ver los x días.
@@ -228,6 +227,7 @@ async def enter_description(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             
             context.user_data['expense_obj'].viaje = last_trip
             
+            await update.callback_query.answer()
             await update.callback_query.edit_message_text(
                 f"🛫Ole ole viajecito!! El viaje es {last_trip}?",
                 reply_markup=markup
@@ -235,6 +235,7 @@ async def enter_description(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             return ConvState.ENTER_TRIP
             
         else:
+            await update.callback_query.answer()
             await update.callback_query.edit_message_text(
                 f"🛫Ole ole viajecito!! Introduce el viaje",
             )
@@ -253,8 +254,6 @@ async def enter_description_from_trip(update: Update, context: ContextTypes.DEFA
     Returns:
         int: _description_
     """
-    # Actualizo el estado:
-    context.user_data['states'].append(ConvState.ENTER_TRIP)
     
     if update.callback_query:
         # Viene del markup
@@ -262,6 +261,7 @@ async def enter_description_from_trip(update: Update, context: ContextTypes.DEFA
         
         if trip == str(ConvState.YES):
             # En el paso anterior hemos guardado el viaje por lo que no hay que hacer nada (preguntar por la descripción)
+            await update.callback_query.answer()
             await update.callback_query.edit_message_text(
                 f"🎯Introduce una breve descripción del {context.user_data['expense_obj'].tipo}:"
             )
@@ -270,6 +270,7 @@ async def enter_description_from_trip(update: Update, context: ContextTypes.DEFA
             # Preguntamos por el viaje:
             context.user_data['expense_obj'].viaje = None
             
+            await update.callback_query.answer()
             await update.callback_query.edit_message_text(
                     f"🛫Vale, pues introduce el viaje:",
                 )
@@ -286,8 +287,6 @@ async def enter_description_from_trip(update: Update, context: ContextTypes.DEFA
 async def enter_who(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
     
-    # Actualizo el estado:
-    context.user_data['states'].append(ConvState.ENTER_WHO)
     
     user = update.effective_user
     context.user_data['expense_obj'].descripcion = update.message.text
@@ -313,13 +312,13 @@ async def enter_who(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def enter_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
-    # Actualizo el estado:
-    context.user_data['states'].append(ConvState.CONFIRM)
     
     user = update.effective_user
     context.user_data['expense_obj'].quien = update.callback_query.data
     
     markup = yes_no_button()
+    
+    await update.callback_query.answer()
     await update.callback_query.edit_message_text(
                     f"📜Está todo correcto?\n{str(context.user_data['expense_obj'])}",
                     reply_markup=markup
@@ -329,13 +328,11 @@ async def enter_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 async def enter_save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
     
-    # Actualizo el estado:
-    context.user_data['states'].append(ConvState.SAVE)
-    
     user = update.effective_user
     ind_save = update.callback_query.data
     
     if ind_save == str(ConvState.YES):
+        await update.callback_query.answer()
         await update.callback_query.edit_message_text(
                     f"🧠Genial! Guardamos el registro\nPara añadir otro registro usa el comando /nuevo_gasto.",
                 )
@@ -344,6 +341,7 @@ async def enter_save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         return ConversationHandler.END
     
     else:
+        await update.callback_query.answer()
         await update.callback_query.edit_message_text(
                     f"⛔Ups de momento no se puede modificar nada, está en desarrollo :(\nPara añadir otro registro usa el comando /nuevo_gasto.",
                 )
@@ -361,29 +359,6 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     )
     context.user_data.clear() # Limpiamos los datos del usuario
     return ConversationHandler.END
-
-async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """La función va a llevar un control de los estados en los que se encuentra el bot y va a llevarte al paso anterior
-
-    Args:
-        update (Update): _description_
-        context (ContextTypes.DEFAULT_TYPE): _description_
-
-    Returns:
-        int: _description_
-    """
-    
-    # Recupero el estado actual y el estado previo, después borro el estado actual y me voy al estado previo:
-    if context.user_data(['states']):
-        actual_state = context.user_data(['states']).pop() # Antes del cancel
-        previus_state = context.user_data(['states'])[-1]
-    
-    else:
-        # No puedes hacer cancel si la conversación no ha empezado
-        pass
-    
-    
-    
     
 
 enter_expense = ConversationHandler(
