@@ -123,6 +123,33 @@ class Expense:
         return [str(self.user), self.fecha, str(self.importe), self.tipo, 
                 self.categoria, self.descripcion, self.quien, 
                 self.viaje or "", str(self.anualizable)]
+    
+    # Método de serialización para temas de deepcopy, que no de error
+    def serialize(self) -> dict:
+        return {
+            "user": self.user,
+            "_fecha": self._fecha,
+            "_importe": self._importe,
+            "_tipo": self._tipo,
+            "_categoria": self._categoria,
+            "_descripcion": self._descripcion,
+            "_quien": self._quien,
+            "_viaje": self._viaje,
+            "_anualizable": self._anualizable,
+        }
+
+    @classmethod
+    def deserialize(cls, data: dict) -> "Expense":
+        obj = cls(user=data["user"])
+        obj._fecha = data["_fecha"]
+        obj._importe = data["_importe"]
+        obj._tipo = data["_tipo"]
+        obj._categoria = data["_categoria"]
+        obj._descripcion = data["_descripcion"]
+        obj._quien = data["_quien"]
+        obj._viaje = data["_viaje"]
+        obj._anualizable = data["_anualizable"]
+        return obj
 
     # La función de guardar podría estar aquí como método de la clase (para poder hacer expense.save()),
     # pero entonces la clase ya no sería solo el modelo de datos sino que también se encargaría del I/O
