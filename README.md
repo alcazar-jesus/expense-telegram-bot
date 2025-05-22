@@ -73,18 +73,21 @@ expense-telegram-bot/
 - [ ] Conversación para añadir un gasto
     - [x] Añadir gasto/ingreso
     - [x] Solo ir al estado de introducior nombre de viaje si es categoría viaje
-    - [ ] Poder hacer modificaciones
-        - [ ] Poder modificar fecha
-        - [ ] Modificar categoría (y en el momento añadir una nueva categoría)
     - [x] Confirmación del gasto
-    - [ ] Añadir nuevas categorías
     - [x] Lógica de viajes (si la categoría es viajes por defecto tomar el último viaje)
     - [x] Tomar el último viaje de los últimos dos meses.
-    - [ ] Después de gasto: "Ouch ese gasto duele, es 2 veces mayor que la media" (si el gasto es muy grande)
     - [x] Chistes de cuñado.
     - [x] Arreglar problema del guardado (no lo pone en nueva linea)
     - [ ] Opción de ir al paso anterior.
+        - [ ] Crear variable para ver del estado del que viene y del estado en el que está.
+        - [ ] Con esto generar un comando para volver al paso anterior.
+    - [ ] Poder hacer modificaciones
+        - [ ] Poder modificar fecha
+        - [ ] Modificar categoría (y en el momento añadir una nueva categoría)
+    - [ ] Añadir nuevas categorías
+    - [ ] Después de gasto: "Ouch ese gasto duele, es 2 veces mayor que la media" (si el gasto es muy grande)
 - [ ] Añadir test unitarios
+- [ ] Añadir comando de help
 
 
 ### Características futuras

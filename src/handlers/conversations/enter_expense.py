@@ -25,6 +25,7 @@ logger = logging.getLogger("expense_bot.handlers.conversations")
 
 class ConvState(IntEnum):
     """Gestiona los estados de la conversación"""
+    START = auto()
     SELECT_TYPE = auto()
     INCOME_ENTRY = auto()
     SPENDING_ENTRY = auto()
@@ -70,6 +71,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     Returns:
         int: Estado de la conversación
     """
+    
+    # Lo primero que hago es registrar el estado en el que está, para ello hay una lista que lleva este registro
+    # la cabeza de la lista es el estado actual. Si vuelvo a un estado anterior la cabeza de la lista se mueve 
+    # un registro a la izquierda y se borra el estado en el que estaba, es decir, se hacer un drop del estado anterior.
+    context.user_data['states'] = [ConvState.START]
+    
+    
     # Nos traemos la info del usuario que se está comunicando
     user = update.effective_user
 
@@ -113,6 +121,9 @@ async def enter_import(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     Returns:
         int: _description_
     """
+    # Actualizo la lista de estados:
+    context.user_data['states'].append(ConvState.ENTER_EXPENSE)
+    
     
     expense_type = LABELS_ConvState[int(update.callback_query.data)]
     user = update.effective_user
@@ -145,6 +156,9 @@ async def select_category(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     Returns:
         int: _description_
     """
+    
+    # Actualizo el estado:
+    context.user_data['states'].append(ConvState.SELECT_TYPE)
     
     importe = update.message.text
     user = update.effective_user
@@ -181,6 +195,9 @@ async def enter_description(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     Returns:
         int: Estado
     """
+    
+    # Actualizo el estado:
+    context.user_data['states'].append(ConvState.ENTER_DESCRIPTION)
     
     cat = update.callback_query.data
     print(cat)
@@ -236,6 +253,8 @@ async def enter_description_from_trip(update: Update, context: ContextTypes.DEFA
     Returns:
         int: _description_
     """
+    # Actualizo el estado:
+    context.user_data['states'].append(ConvState.ENTER_TRIP)
     
     if update.callback_query:
         # Viene del markup
@@ -266,6 +285,10 @@ async def enter_description_from_trip(update: Update, context: ContextTypes.DEFA
 
 async def enter_who(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
+    
+    # Actualizo el estado:
+    context.user_data['states'].append(ConvState.ENTER_WHO)
+    
     user = update.effective_user
     context.user_data['expense_obj'].descripcion = update.message.text
     
@@ -290,6 +313,8 @@ async def enter_who(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def enter_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
+    # Actualizo el estado:
+    context.user_data['states'].append(ConvState.CONFIRM)
     
     user = update.effective_user
     context.user_data['expense_obj'].quien = update.callback_query.data
@@ -302,6 +327,10 @@ async def enter_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     return ConvState.SAVE
     
 async def enter_save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    
+    
+    # Actualizo el estado:
+    context.user_data['states'].append(ConvState.SAVE)
     
     user = update.effective_user
     ind_save = update.callback_query.data
@@ -320,7 +349,6 @@ async def enter_save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 )
         return ConversationHandler.END
     
-
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     """Cancels and ends the conversation."""
@@ -331,18 +359,42 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
         f"👋 Hasta luego {user.first_name}!", 
     )
-    context.user_data.clear()
+    context.user_data.clear() # Limpiamos los datos del usuario
     return ConversationHandler.END
+
+async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """La función va a llevar un control de los estados en los que se encuentra el bot y va a llevarte al paso anterior
+
+    Args:
+        update (Update): _description_
+        context (ContextTypes.DEFAULT_TYPE): _description_
+
+    Returns:
+        int: _description_
+    """
+    
+    # Recupero el estado actual y el estado previo, después borro el estado actual y me voy al estado previo:
+    if context.user_data(['states']):
+        actual_state = context.user_data(['states']).pop() # Antes del cancel
+        previus_state = context.user_data(['states'])[-1]
+    
+    else:
+        # No puedes hacer cancel si la conversación no ha empezado
+        pass
+    
+    
+    
+    
 
 enter_expense = ConversationHandler(
     entry_points=[
         CommandHandler("start", start),
         CommandHandler("nuevo_gasto", start)],
     states={
-        ConvState.SELECT_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, select_category)],
         ConvState.ENTER_EXPENSE: [
             CallbackQueryHandler(enter_import, pattern=f"^{str(ConvState.INCOME_ENTRY)}$|^{str(ConvState.SPENDING_ENTRY)}$"),
                                 ],
+        ConvState.SELECT_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, select_category)],
         ConvState.ENTER_DESCRIPTION: [
             CallbackQueryHandler(enter_description, pattern="^"+"$|^".join([c for c in load_categories('gasto')])+"$"),
             CallbackQueryHandler(enter_description, pattern="^"+"$|^".join([c for c in load_categories('ingreso')])+"$"),
