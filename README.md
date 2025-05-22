@@ -72,25 +72,30 @@ expense-telegram-bot/
 - [x] Gestión de usuarios v1
 - [ ] Conversación para añadir un gasto
     - [x] Añadir gasto/ingreso
-    - [ ] Solo ir al estado de introducior nombre de viaje si es categoría viaje
+    - [x] Solo ir al estado de introducior nombre de viaje si es categoría viaje
     - [ ] Poder hacer modificaciones
-    - [ ] Poder modificar fecha
-    - [ ] Confirmación del gasto
-    - [ ] Modificar categoría (y en el momento añadir una nueva categoría)
-    - [ ] Lógica de viajes (si la categoría es viajes por defecto tomar el último viaje)
+        - [ ] Poder modificar fecha
+        - [ ] Modificar categoría (y en el momento añadir una nueva categoría)
+    - [x] Confirmación del gasto
+    - [ ] Añadir nuevas categorías
+    - [x] Lógica de viajes (si la categoría es viajes por defecto tomar el último viaje)
+    - [x] Tomar el último viaje de los últimos dos meses.
     - [ ] Después de gasto: "Ouch ese gasto duele, es 2 veces mayor que la media" (si el gasto es muy grande)
     - [x] Chistes de cuñado.
-    - [ ] Arreglar problema del guardado (no lo pone en nueva linea)
+    - [x] Arreglar problema del guardado (no lo pone en nueva linea)
+    - [ ] Opción de ir al paso anterior.
+- [ ] Añadir test unitarios
+
 
 ### Características futuras
 
-- [ ] Migrar a SQL las tablas
 - [ ] Ver estadísticas de gastos
 - [ ] Listar últimos gastos
 - [ ] Poder eliminar algún gasto que esté mal 
     - [ ] Eliminar el último gasto
     - [ ] Eliminar un gasto en específico
     - [ ] Poder modificar un gasto
+- [ ] Migrar a SQL las tablas
 - [ ] Añandir "gastos" de inversiones
     - [ ] Nueva categoría que sea "Inversión"
     - [ ] Calcular rentabilidades de las inversiones
@@ -107,6 +112,7 @@ expense-telegram-bot/
 #### Características muy futuras
  
 - [ ] Capacidad de entender lenguaje natural
+    - [ ] Que me mande a una conversación u a otra según lo que le diga ("añadir gasto", "ver estadísticas", ....), pero lo que le diga es lenguaje natural, no cosas predefinidas.
 - [ ] Poder subir foto de recibo y que registre automáticamente el gasto
 
 
