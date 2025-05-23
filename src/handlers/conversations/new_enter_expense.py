@@ -387,7 +387,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
     
 
-enter_expense = ConversationHandler(
+conv_new_enter_expense = ConversationHandler(
     entry_points=[
         CommandHandler("start", start),
         CommandHandler("nuevo_gasto", start)],

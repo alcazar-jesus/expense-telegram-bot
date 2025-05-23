@@ -142,7 +142,7 @@ class StateManager:
         else:
             pass
     
-    def clear_manager(context, self):
+    def clear_manager(self, context):
         context.user_data.clear()
         self.BACK_COMMAND = ""
         self.FIRST_BACK = True
