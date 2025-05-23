@@ -49,7 +49,7 @@ class Expense:
     def importe(self, value: str) -> float:
         try:
             value = float(value.replace(',', '.'))
-        except Exception as e:
+        except ValueError as e:
             raise ValueError(f"Tiene que ser un valor numérico: {e}")
         
         if value is None:

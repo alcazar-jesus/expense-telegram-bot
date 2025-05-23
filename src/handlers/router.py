@@ -7,8 +7,8 @@ from telegram.ext import ApplicationBuilder
 
 # importas conversaciones
 from handlers.conversations.new_user import conv_nuevo_usuario_handler
-from handlers.conversations.enter_expense import enter_expense
-
+# from handlers.conversations.enter_expense import enter_expense
+from handlers.conversations.prueba_state_manager import enter_expense
 
 def register_all_handlers(application):
     # Comandos simples

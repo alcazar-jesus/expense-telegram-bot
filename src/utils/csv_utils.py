@@ -34,6 +34,9 @@ def get_last_trip(path: Path = DATA_FILE_PATH, n: int = 1) -> str:
     Returns:
         str: El nombre del último viaje
     """
+    first = not path.exists()
+    if first:
+        return None
     df = pd.read_csv(path, sep=';')
     if df.empty:
         return None
