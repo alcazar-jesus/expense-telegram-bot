@@ -12,6 +12,7 @@ TOKEN = os.getenv('API_TOKEN')
 DATA_PATH = BASE_DIR / "data"
 DATA_FILE_PATH = BASE_DIR / "data" / "gastos.csv"
 REGISTER_PWD = os.getenv('REGISTER_PWD')
+DEVELOPER_CHAT_ID = os.getenv("DEVELOPER_CHAT_ID")
 
 
 if __name__ == '__main__':

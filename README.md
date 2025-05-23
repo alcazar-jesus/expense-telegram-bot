@@ -78,16 +78,21 @@ expense-telegram-bot/
     - [x] Tomar el último viaje de los últimos dos meses.
     - [x] Chistes de cuñado.
     - [x] Arreglar problema del guardado (no lo pone en nueva linea)
-    - [ ] Opción de ir al paso anterior.
-        - [ ] Crear variable para ver del estado del que viene y del estado en el que está.
-        - [ ] Con esto generar un comando para volver al paso anterior.
+    - [x] Opción de ir al paso anterior.
+        - [x] Crear variable para ver del estado del que viene y del estado en el que está.
+        - [x] Con esto generar un comando para volver al paso anterior.
+        - [ ] **Estaría bien modificarlo para que fuera más práctico**
+            - [ ] Dentro de la propia librería 
+            - [ ] Que es StateManager sea el objeto que gestione todo, mezcla entre Update y context. Sería un objeto que los incluye.
     - [ ] Poder hacer modificaciones
         - [ ] Poder modificar fecha
         - [ ] Modificar categoría (y en el momento añadir una nueva categoría)
-    - [ ] Añadir nuevas categorías
+    - [ ] Añadir nuevas categorías (como comando)
     - [ ] Después de gasto: "Ouch ese gasto duele, es 2 veces mayor que la media" (si el gasto es muy grande)
 - [ ] Añadir test unitarios
 - [ ] Añadir comando de help
+
+- [ ] Añadir logger
 
 
 ### Características futuras

@@ -4,19 +4,20 @@ from datetime import datetime
 
 import sys
 from pathlib import Path
-project_root = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(project_root / 'src'))
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-import handlers.conversations.new_enter_expense as psm
-from handlers.conversations.new_enter_expense import ConvState
+print(str(Path(__file__).resolve().parent.parent))
+
+import src.handlers.conversations.new_enter_expense as psm
+from src.handlers.conversations.new_enter_expense import ConvState
 from telegram.ext import ConversationHandler
-from models.expense import Expense
+from src.models.expense import Expense
 
 # Tests for router and bot main
 import pytest
 from unittest.mock import MagicMock, patch
-import handlers.router as router
-import bot as bot
+import src.handlers.router as router
+import src.bot as bot
 
 class DummyHandler:
     pass

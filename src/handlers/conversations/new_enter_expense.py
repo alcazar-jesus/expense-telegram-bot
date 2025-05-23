@@ -1,10 +1,10 @@
 import logging
 import random
-from datetime import datetime
-from enum import Enum, IntEnum, auto
+#from datetime import datetime
+from enum import IntEnum, auto
 
 from src.settings import DATA_FILE_PATH
-from src.utils.category_utils import load_categories, load_category_markup
+from src.utils.category_utils import load_categories, load_category_markup, chunk_list
 from src.utils.user_utils import check_user 
 from src.utils.csv_utils import get_last_trip, save_expense
 from src.models.expense import Expense
@@ -46,6 +46,8 @@ LABELS_ConvState = {
     ConvState.INCOME_ENTRY: 'ingreso',
     ConvState.SPENDING_ENTRY: 'gasto',
 }
+
+MODIFICATIONS = ["Fecha", "Tipo", "Importe", "Concepto", "Descripción", "Quien", "Viaje", "Anualizable"]
 
 
 state_manager = StateManager()
@@ -366,11 +368,32 @@ async def enter_save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         return ConversationHandler.END
     
     else:
+        
+        
+        buttons = [
+        InlineKeyboardButton(cat, callback_data=f"{cat}")
+        for cat in MODIFICATIONS
+        ]
+        
+        markup = InlineKeyboardMarkup(chunk_list(buttons, 2))
         await state_manager.update_send_message(update, context,
-                    f"⛔Ups de momento no se puede modificar nada, está en desarrollo :(\nPara añadir otro registro usa el comando /nuevo_gasto.",
+                    text=f"🥸¿Qué quieres modificar?",
+                    reply_markup=markup
                 )
-        state_manager.clear_manager(context)
-        return ConversationHandler.END
+        state_manager.push(update, context, ConvState.SAVE, enter_save)
+        return ConvState.MODIFY
+
+async def enter_modify(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user = update.effective_user
+    ind_modify = state_manager.get_input_data(update, context)
+    
+    await state_manager.update_send_message(update, context,
+                    text=f"Ups de momento esta parte está en desarrollo. Modificar: {ind_modify}",
+                )
+    state_manager.clear_manager(context)
+    return ConversationHandler.END
+    
+    
     
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
@@ -386,6 +409,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     state_manager.clear_manager(context)
     return ConversationHandler.END
     
+
 
 conv_new_enter_expense = ConversationHandler(
     entry_points=[
@@ -413,7 +437,8 @@ conv_new_enter_expense = ConversationHandler(
         ],
         ConvState.SAVE:[
             CallbackQueryHandler(enter_save, pattern=f"^{ConvState.YES}$|^{ConvState.NO}$")
-        ]
+        ],
+        ConvState.MODIFY: [CallbackQueryHandler(enter_modify, pattern="^"+"$|^".join(MODIFICATIONS)+"$")]
     },
     fallbacks=[
         CommandHandler("cancel", cancel),
@@ -421,3 +446,5 @@ conv_new_enter_expense = ConversationHandler(
     per_message=False 
     
 )
+
+
