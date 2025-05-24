@@ -148,7 +148,6 @@ async def enter_import(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     # Actualizo la lista de estados:
     
     input_data = state_manager.get_input_data(update, context)
-    print(input_data)
     expense_type = LABELS_ConvState[int(input_data)]
     context.user_data["expense_obj"].tipo = expense_type # He cambiado ConvState.SPENDING_ENTRY por su valor correspondiente
 
@@ -195,17 +194,15 @@ async def select_category(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     
     input_data = state_manager.get_input_data(update, context)
-    print(input_data)
-    importe = update.message.text
     
     user = update.effective_user
     try:
-        context.user_data['expense_obj'].importe = importe
+        context.user_data['expense_obj'].importe = input_data
     except Exception as e:
-        logger.error(f"El usuario {user.id} añade un {context.user_data['expense_obj'].tipo} incorrecto: {importe}. Error: {e}")
+        logger.error(f"El usuario {user.id} añade un {context.user_data['expense_obj'].tipo} incorrecto: {input_data}. Error: {e}")
         
         await state_manager.update_send_message(update=update, context=context,
-            text=f"Vaya, el importe de {importe} es incorrecto, asegurate de que no es negativo o que es un valor numérico!"
+            text=f"Vaya, el importe de {input_data} es incorrecto, asegurate de que no es negativo o que es un valor numérico!"
         )
         state_manager.push(update, context, ConvState.SELECT_TYPE, select_category)  
         return ConvState.SELECT_TYPE
@@ -213,7 +210,7 @@ async def select_category(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     user = update.effective_user
     
-    logger.info(f"El usuario {user.id} quiere añadir un {context.user_data['expense_obj'].tipo}: {importe}")
+    logger.info(f"El usuario {user.id} quiere añadir un {context.user_data['expense_obj'].tipo}: {input_data}")
     
     
     # Función para generar el KeyboardMarkup
@@ -375,7 +372,6 @@ async def enter_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     
 async def enter_save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
-    
     user = update.effective_user
     ind_save = state_manager.get_input_data(update, context)
     
@@ -415,19 +411,55 @@ async def enter_modify(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         state_manager.push(update, context, ConvState.MODIFY, enter_modify)
         return ConvState.MODIFY_DATE
     elif ind_modify == str(ConvState.MODIFY_EXPENSE):
-        await modify_expense(update, context)
+        await state_manager.update_send_message(
+            update, context,
+            text=f"🤑Introduce el nuevo importe:")
+        state_manager.push(update, context, ConvState.MODIFY, enter_modify)
+        return ConvState.MODIFY_EXPENSE
     elif ind_modify == str(ConvState.MODIFY_TYPE):
-        await modify_type(update, context)
+        keyboard = [
+        [InlineKeyboardButton("💸 Gasto", callback_data=str(ConvState.SPENDING_ENTRY))],
+        [InlineKeyboardButton("💰 Ingreso", callback_data=str(ConvState.INCOME_ENTRY))],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await state_manager.update_send_message(
+            update, context,
+            text=f"🎖¿Qué es lo que quieres añadir?",
+            reply_markup=reply_markup)
+        state_manager.push(update, context, ConvState.MODIFY, enter_modify)
+        return ConvState.MODIFY_TYPE
     elif ind_modify == str(ConvState.MODIFY_CATEGORY):
-        await modify_category(update, context)
+        markup = load_category_markup(context.user_data['expense_obj'].tipo)
+        await state_manager.update_send_message(update=update, context=context,
+                text=f"👀 Tomo nota! ¿Cuál es el concepto del {context.user_data['expense_obj'].tipo}?",
+                reply_markup=markup
+            )
+        state_manager.push(update, context, ConvState.MODIFY, enter_modify)  
+        return ConvState.MODIFY_CATEGORY
     elif ind_modify == str(ConvState.MODIFY_DESCR):
-        await modify_description(update, context)
+        await state_manager.update_send_message(update, context,
+                f"🎯Introduce una breve descripción del {context.user_data['expense_obj'].tipo}:"
+            )
+        state_manager.push(update, context, ConvState.MODIFY, enter_modify)  
+        return ConvState.MODIFY_DESCR
     elif ind_modify == str(ConvState.MODIFY_WHO):
-        await modify_who(update, context)
+        markup = load_category_markup('quien')
+        await state_manager.update_send_message(update, context, 
+                    f"🫂Al toque, ¿con quién ha sido el {context.user_data['expense_obj'].tipo}:",
+                    markup
+                )
+        state_manager.push(update, context, ConvState.MODIFY, enter_modify)
+        return ConvState.MODIFY_WHO
     elif ind_modify == str(ConvState.MODIFY_TRIP):
-        await modify_trip(update, context)
+        await state_manager.update_send_message(update, context,
+                    f"🛫Introduce el viaje:",
+                )
+        state_manager.push(update, context, ConvState.MODIFY, enter_modify)  
+        return ConvState.MODIFY_TRIP
     elif ind_modify == str(ConvState.MODIFY_ANN):
-        await modify_annualizable(update, context)
+        context.user_data['expense_obj'].anualizable = ~context.user_data['expense_obj'].anualizable
+        state_manager.push(update, context, ConvState.MODIFY, enter_modify)  
+        return await ask_modify_nested(update, context)
     
     # await state_manager.update_send_message(update, context,
     #                 text=f"Ups de momento esta parte está en desarrollo. Modificar: {ind_modify}",
@@ -435,21 +467,15 @@ async def enter_modify(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     # state_manager.clear_manager(context)
     # return ConversationHandler.END
 
-async def modify_again(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    buttons = [
-        InlineKeyboardButton(cat, callback_data=f"{str(k)}")
-        for k,cat in MODIFICATIONS.items()
-    ]
-        
-    markup = InlineKeyboardMarkup(chunk_list(buttons, 2))
-    await state_manager.update_send_message(update, context,
-                    text=f"🥸¿Qué quieres modificar?",
-                    reply_markup=markup
-        )
-    state_manager.push(update, context, ConvState.SAVE_MODIFY, modify_again)
-    return ConvState.MODIFY
-
-
+async def ask_modify_nested(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    
+    markup = yes_no_button()
+    await state_manager.update_send_message(
+            update, context,
+            text=f"¿Ya has acabado?\n\n{str(context.user_data['expense_obj'])}",
+            reply_markup=markup)
+    return ConversationHandler.END
+    
 async def modify_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user = update.effective_user
     str_modify = state_manager.get_input_data(update, context)
@@ -458,41 +484,69 @@ async def modify_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         
         context.user_data['expense_obj'].fecha = str_modify
 
-        markup = yes_no_button()
-        state_manager.update_send_message(
-            update, context,
-            text=f"¿Quieres modificar algo más",
-            reply_markup=markup)
-        return ConvState.SAVE_MODIFY
+        return await ask_modify_nested(update, context)
+        state_manager.push(update, context, ConvState.MODIFY_DATE, modify_date)
+        
     else:
-        state_manager.update_send_message(
+        await state_manager.update_send_message(
             update, context,
             text=f"📆 Introduce la nueva fecha en formato DD/MM/YYYY o DD/MM/YY")
-        return ConvState.MODIFY_DATE
-    
-    
-    
+        return ConvState.MODIFY_DATE    
 
 async def modify_expense(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    pass
+    input_data = state_manager.get_input_data(update, context)
+    user = update.effective_user
+    try:
+        context.user_data['expense_obj'].importe = input_data
+    except Exception as e:
+        logger.error(f"El usuario {user.id} añade un {context.user_data['expense_obj'].tipo} incorrecto: {input_data}. Error: {e}")
+        
+        await state_manager.update_send_message(update=update, context=context,
+            text=f"Vaya, el importe de {input_data} es incorrecto, asegurate de que no es negativo o que es un valor numérico!"
+        )
+        state_manager.push(update, context, ConvState.MODIFY_EXPENSE, modify_expense)  
+        return ConvState.MODIFY_EXPENSE
+    
+    return await ask_modify_nested(update, context)
+    state_manager.push(update, context, ConvState.MODIFY_DATE, modify_date)    
 
 async def modify_type(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    pass
+    input_data = state_manager.get_input_data(update, context)
+    expense_type = LABELS_ConvState[int(input_data)]
+    context.user_data["expense_obj"].tipo = expense_type # He cambiado ConvState.SPENDING_ENTRY por su valor correspondiente
+    
+    return await ask_modify_nested(update, context)
+    state_manager.push(update, context, ConvState.MODIFY_TYPE, modify_type)        
 
 async def modify_category(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    pass
+    
+    input_data = state_manager.get_input_data(update, context)
+    context.user_data['expense_obj'].categoria = input_data
+    
+    return await ask_modify_nested(update, context)
+    state_manager.push(update, context, ConvState.MODIFY_CATEGORY, modify_category)
 
 async def modify_description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    pass
+    
+    input_data = state_manager.get_input_data(update, context)
+    context.user_data['expense_obj'].descripcion = input_data
+
+    return await ask_modify_nested(update, context)
+    state_manager.push(update, context, ConvState.MODIFY_CATEGORY, modify_category)
 
 async def modify_trip(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    pass
+    input_data = state_manager.get_input_data(update, context)
+    context.user_data['expense_obj'].viaje = input_data
+
+    return await ask_modify_nested(update, context)
+    state_manager.push(update, context, ConvState.MODIFY_CATEGORY, modify_category)
 
 async def modify_who(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    pass
-
-async def modify_annualizable(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    pass    
+    input_data = state_manager.get_input_data(update, context)
+    context.user_data['expense_obj'].quien = input_data
+    
+    return await ask_modify_nested(update, context)
+    state_manager.push(update, context, ConvState.MODIFY_CATEGORY, modify_category)  
     
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
@@ -516,22 +570,26 @@ conv_modify = ConversationHandler(
     states={
         ConvState.MODIFY: [CallbackQueryHandler(enter_modify, pattern="^"+"$|^".join([str(c) for c in MODIFICATIONS.keys()])+"$")],
         ConvState.MODIFY_DATE:[MessageHandler(filters.TEXT & ~filters.COMMAND, modify_date)],
-        
-        
-        
-        
-        
-        ConvState.SAVE_MODIFY:[
-            CallbackQueryHandler(modify_again, pattern=f"^{ConvState.YES}$"),
-            CallbackQueryHandler(modify_again, pattern=f"^{ConvState.NO}$")]
-        
+        ConvState.MODIFY_EXPENSE:[MessageHandler(filters.TEXT & ~filters.COMMAND, modify_expense)],
+        ConvState.MODIFY_TRIP:[MessageHandler(filters.TEXT & ~filters.COMMAND, modify_trip)],
+        ConvState.MODIFY_DESCR:[MessageHandler(filters.TEXT & ~filters.COMMAND, modify_description)],
+        ConvState.MODIFY_CATEGORY:[
+            CallbackQueryHandler(modify_description, pattern="^"+"$|^".join([c for c in load_categories('gasto')])+"$"),
+            CallbackQueryHandler(modify_description, pattern="^"+"$|^".join([c for c in load_categories('ingreso')])+"$"),
+                            ],
+        ConvState.MODIFY_TYPE: [CallbackQueryHandler(modify_type, pattern=f"^{str(ConvState.INCOME_ENTRY)}$|^{str(ConvState.SPENDING_ENTRY)}$")],
+        ConvState.MODIFY_WHO: [CallbackQueryHandler(modify_who, pattern="^"+"$|^".join([c for c in load_categories('quien')])+"$")],  
+        ConvState.SAVE_MODIFY: [CallbackQueryHandler(enter_save, pattern=f"^{str(ConvState.YES)}$|^{str(ConvState.NO)}$")]    
     },
     map_to_parent={
             # Return to top level menu
-            ConversationHandler.END: ConvState.CONFIRM,
+            ConversationHandler.END: ConvState.SAVE,
             # End conversation altogether
             ConvState.NESTED_STOP: ConversationHandler.END,
         },
+    fallbacks=[
+        CommandHandler("cancel", cancel),
+        CommandHandler("back", state_manager.back)],
 )
 
 
@@ -550,7 +608,7 @@ conv_new_enter_expense = ConversationHandler(
                             ],
         ConvState.ENTER_TRIP: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, enter_description_from_trip),
-            CallbackQueryHandler(enter_description_from_trip, pattern=f"^{ConvState.YES}$|^{ConvState.NO}$")
+            CallbackQueryHandler(enter_description_from_trip, pattern=f"^{str(ConvState.YES)}$|^{str(ConvState.NO)}$")
                                ],
         ConvState.ENTER_WHO:[
             MessageHandler(filters.TEXT & ~filters.COMMAND, enter_who)
@@ -560,7 +618,7 @@ conv_new_enter_expense = ConversationHandler(
             
         ],
         ConvState.SAVE:[
-            CallbackQueryHandler(enter_save, pattern=f"^{ConvState.YES}$|^{ConvState.NO}$")
+            CallbackQueryHandler(enter_save, pattern=f"^{str(ConvState.YES)}$|^{str(ConvState.NO)}$")
         ],
         ConvState.MODIFY: [conv_modify]
     },

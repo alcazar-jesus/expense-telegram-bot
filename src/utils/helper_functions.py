@@ -1,5 +1,5 @@
 import re
-import datetime
+from datetime import datetime
 
 def validate_date(fecha_str):
     # Unifica separadores a "/"
