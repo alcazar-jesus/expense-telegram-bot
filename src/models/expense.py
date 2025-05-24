@@ -8,6 +8,7 @@ from typing import Optional, List
 # esto mejora la legibilidad y la mantenibilidad del código, así como facilitar el uso de herramientas
 # de análisis estadístico. 
 
+from utils.helper_functions import format_date
 
 @dataclass
 class Expense:
@@ -28,18 +29,15 @@ class Expense:
                                             # (es decir, para el computo este gasto se debería anualizar, por ejemplo si son 120€, serían 12€ al mes).
 
     @property
-    def fecha(self) -> float:
+    def fecha(self) -> date:
         return self._fecha
     @fecha.setter
     def fecha(self, value: str) -> date:
         try:
-            value = datetime.strptime(value, '%d/%m/%Y')
+            value = format_date(value)
         except ValueError:
-            try:
-                value = datetime.strptime(value, '%d/%m/%y')
-            except ValueError as e:
-                raise ValueError("La fecha tiene que ser en formato dd/mm/YYYY o en formato dd/mm/YY: {e}")
-        self._fecha = value.strftime('%d/%m/%Y')  
+            raise ValueError("La fecha tiene que ser en formato dd/mm/YYYY o en formato dd/mm/YY: {e}")
+        self._fecha = value
     
     @property
     def importe(self) -> float:

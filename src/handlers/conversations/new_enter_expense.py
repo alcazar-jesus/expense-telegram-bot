@@ -11,6 +11,7 @@ from src.models.expense import Expense
 from src.models.state_manager import StateManager
 
 from src.utils.constantes import *
+from src.utils.helper_functions import validate_date
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -41,13 +42,32 @@ class ConvState(IntEnum):
     ENTER_DATE = auto()
     YES = auto()
     NO = auto()
+    MODIFY_DATE = auto()
+    MODIFY_TYPE = auto()
+    MODIFY_EXPENSE = auto()
+    MODIFY_CATEGORY = auto()
+    MODIFY_DESCR = auto()
+    MODIFY_WHO = auto()
+    MODIFY_TRIP = auto()
+    MODIFY_ANN = auto()
+    NESTED_STOP = auto()
+    SAVE_MODIFY = auto()
 
 LABELS_ConvState = {
     ConvState.INCOME_ENTRY: 'ingreso',
     ConvState.SPENDING_ENTRY: 'gasto',
 }
 
-MODIFICATIONS = ["Fecha", "Tipo", "Importe", "Concepto", "Descripción", "Quien", "Viaje", "Anualizable"]
+MODIFICATIONS = {
+    ConvState.MODIFY_DATE :"Fecha",
+    ConvState.MODIFY_TYPE :"Tipo",
+    ConvState.MODIFY_EXPENSE :"Importe",
+    ConvState.MODIFY_CATEGORY :"Concepto",
+    ConvState.MODIFY_DESCR :"Descripción",
+    ConvState.MODIFY_WHO :"Quien",
+    ConvState.MODIFY_TRIP :"Viaje",
+    ConvState.MODIFY_ANN :"Anualizable"
+    }
 
 
 state_manager = StateManager()
@@ -371,8 +391,8 @@ async def enter_save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         
         
         buttons = [
-        InlineKeyboardButton(cat, callback_data=f"{cat}")
-        for cat in MODIFICATIONS
+        InlineKeyboardButton(cat, callback_data=f"{str(k)}")
+        for k,cat in MODIFICATIONS.items()
         ]
         
         markup = InlineKeyboardMarkup(chunk_list(buttons, 2))
@@ -387,13 +407,92 @@ async def enter_modify(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     user = update.effective_user
     ind_modify = state_manager.get_input_data(update, context)
     
+    if ind_modify == str(ConvState.MODIFY_DATE):
+        await state_manager.update_send_message(
+            update, context,
+            text=f"📆 Introduce la nueva fecha en formato DD/MM/YYYY o DD/MM/YY"
+            )
+        state_manager.push(update, context, ConvState.MODIFY, enter_modify)
+        return ConvState.MODIFY_DATE
+    elif ind_modify == str(ConvState.MODIFY_EXPENSE):
+        await modify_expense(update, context)
+    elif ind_modify == str(ConvState.MODIFY_TYPE):
+        await modify_type(update, context)
+    elif ind_modify == str(ConvState.MODIFY_CATEGORY):
+        await modify_category(update, context)
+    elif ind_modify == str(ConvState.MODIFY_DESCR):
+        await modify_description(update, context)
+    elif ind_modify == str(ConvState.MODIFY_WHO):
+        await modify_who(update, context)
+    elif ind_modify == str(ConvState.MODIFY_TRIP):
+        await modify_trip(update, context)
+    elif ind_modify == str(ConvState.MODIFY_ANN):
+        await modify_annualizable(update, context)
+    
+    # await state_manager.update_send_message(update, context,
+    #                 text=f"Ups de momento esta parte está en desarrollo. Modificar: {ind_modify}",
+    #             )
+    # state_manager.clear_manager(context)
+    # return ConversationHandler.END
+
+async def modify_again(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    buttons = [
+        InlineKeyboardButton(cat, callback_data=f"{str(k)}")
+        for k,cat in MODIFICATIONS.items()
+    ]
+        
+    markup = InlineKeyboardMarkup(chunk_list(buttons, 2))
     await state_manager.update_send_message(update, context,
-                    text=f"Ups de momento esta parte está en desarrollo. Modificar: {ind_modify}",
-                )
-    state_manager.clear_manager(context)
-    return ConversationHandler.END
+                    text=f"🥸¿Qué quieres modificar?",
+                    reply_markup=markup
+        )
+    state_manager.push(update, context, ConvState.SAVE_MODIFY, modify_again)
+    return ConvState.MODIFY
+
+
+async def modify_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user = update.effective_user
+    str_modify = state_manager.get_input_data(update, context)
+    
+    if validate_date(str_modify):
+        
+        context.user_data['expense_obj'].fecha = str_modify
+
+        markup = yes_no_button()
+        state_manager.update_send_message(
+            update, context,
+            text=f"¿Quieres modificar algo más",
+            reply_markup=markup)
+        return ConvState.SAVE_MODIFY
+    else:
+        state_manager.update_send_message(
+            update, context,
+            text=f"📆 Introduce la nueva fecha en formato DD/MM/YYYY o DD/MM/YY")
+        return ConvState.MODIFY_DATE
     
     
+    
+
+async def modify_expense(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    pass
+
+async def modify_type(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    pass
+
+async def modify_category(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    pass
+
+async def modify_description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    pass
+
+async def modify_trip(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    pass
+
+async def modify_who(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    pass
+
+async def modify_annualizable(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    pass    
     
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
@@ -409,6 +508,31 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     state_manager.clear_manager(context)
     return ConversationHandler.END
     
+
+conv_modify = ConversationHandler(
+    entry_points=[
+        CallbackQueryHandler(enter_modify, pattern="^"+"$|^".join([str(c) for c in MODIFICATIONS.keys()])+"$")
+    ],
+    states={
+        ConvState.MODIFY: [CallbackQueryHandler(enter_modify, pattern="^"+"$|^".join([str(c) for c in MODIFICATIONS.keys()])+"$")],
+        ConvState.MODIFY_DATE:[MessageHandler(filters.TEXT & ~filters.COMMAND, modify_date)],
+        
+        
+        
+        
+        
+        ConvState.SAVE_MODIFY:[
+            CallbackQueryHandler(modify_again, pattern=f"^{ConvState.YES}$"),
+            CallbackQueryHandler(modify_again, pattern=f"^{ConvState.NO}$")]
+        
+    },
+    map_to_parent={
+            # Return to top level menu
+            ConversationHandler.END: ConvState.CONFIRM,
+            # End conversation altogether
+            ConvState.NESTED_STOP: ConversationHandler.END,
+        },
+)
 
 
 conv_new_enter_expense = ConversationHandler(
@@ -438,7 +562,7 @@ conv_new_enter_expense = ConversationHandler(
         ConvState.SAVE:[
             CallbackQueryHandler(enter_save, pattern=f"^{ConvState.YES}$|^{ConvState.NO}$")
         ],
-        ConvState.MODIFY: [CallbackQueryHandler(enter_modify, pattern="^"+"$|^".join(MODIFICATIONS)+"$")]
+        ConvState.MODIFY: [conv_modify]
     },
     fallbacks=[
         CommandHandler("cancel", cancel),
